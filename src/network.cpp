@@ -333,10 +333,10 @@ void* listenUDPBroadcast(void* nothing){
 						mem_ptr		= (void**)malloc(sizeof(void*)*3);
 						mem_ptr[0] 	= malloc(sizeof(netcard));
 						mem_ptr[1] 	= malloc(len);
-						mem_ptr[2]	= malloc(1);
+						mem_ptr[2]	= malloc(sizeof(int32_t));
 						memcpy(mem_ptr[0], &origin, sizeof(netcard));
 						memcpy(mem_ptr[1], data, len);
-						memcpy(mem_ptr[2], &len, 1);
+						memcpy(mem_ptr[2], &len, sizeof(int32_t));
 						pthread_create(&thread, NULL, listenUDPBroadcastThread, mem_ptr);
 						break;
 					case ST_TCPADDR: 
