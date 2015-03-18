@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 
-void networkConnectionlessCallBack(netcard num, char *data, char len){
+void networkConnectionlessCallBack(netcard num, char *data, int32_t len){
 	char _data[256];
 	ssize_t _len;
 	nErr error;

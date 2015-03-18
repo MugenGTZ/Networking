@@ -27,9 +27,9 @@ This network module should do the following
 	void 	initNetwork();
 
 	//Connectionless network protocol
-	void 	dataServerCallBack(void (*fun)(netcard num, char *data, char len));
+	void 	dataServerCallBack(void (*fun)(netcard num, char *data, int32_t len));
 	void	sendData(netcard num, char *data, int32_t len);
-	void	sendBroadcast(char *data, char len);
+	void	sendBroadcast(char *data, int32_t len);
 
 	//Connection oriented network protocol
 	void	chanServerCallBack(void (*fun)(chan extChan));

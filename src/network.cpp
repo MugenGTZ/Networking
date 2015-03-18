@@ -21,7 +21,7 @@ typedef struct _peerInfo{
 
 netcard myNum;
 std::map<netcard, peerInfo> netcardMap;
-void (*dataServerCallBackFun)(netcard, char *, char);
+void (*dataServerCallBackFun)(netcard, char *, int32_t);
 void (*chanServerCallBackFun)(chan extChan);
 #define NPORTS				5
 
@@ -76,7 +76,7 @@ netcard	getMyNetCard(){
 ////////////////////////////////////////////////////////////////////////////////////////
 //Connectionless network protocol
 ////////////////////////////////////////////////////////////////////////////////////////
-void 	dataServerCallBack(void (*fun)(netcard num, char *data, char len)){
+void 	dataServerCallBack(void (*fun)(netcard num, char *data, int32_t len)){
 	dataServerCallBackFun = fun;
 }
 //Make a package as follows encrypt([org. netcard, dest. netcard, len, checksum1, data, checksum2])
@@ -130,7 +130,7 @@ void	sendDataAdv(netcard num, SENDTYPE type, char *data, int32_t len){
 	free(packCrypt);
 }
 
-void	sendBroadcast(char *data, char len){
+void	sendBroadcast(char *data, int32_t len){
 	sendData(NETCARDBROADCAST, data, len);
 }
 
@@ -266,7 +266,7 @@ void broadcastOverUDP(void* buffer, int length){
 
 void* listenUDPBroadcastThread(void* param){
 	void **mem_ptr = (void**)param;
-	if(NULL != dataServerCallBackFun) dataServerCallBackFun(*((netcard*)mem_ptr[0]), (char*)mem_ptr[1], *((char*)mem_ptr[2]));
+	if(NULL != dataServerCallBackFun) dataServerCallBackFun(*((netcard*)mem_ptr[0]), (char*)mem_ptr[1], *((int32_t*)mem_ptr[2]));
 	free(mem_ptr[0]);
 	free(mem_ptr[1]);
 	free(mem_ptr[2]);
