@@ -102,10 +102,7 @@ void	sendDataAdv(netcard num, SENDTYPE type, char *data, int32_t len){
     inet_ntop(AF_INET, &myAddress, subnetAddr, INET_ADDRSTRLEN);
 
 	char checksum1[CHECKSUMLENGTH], checksum2[CHECKSUMLENGTH];
-	//TODO checksum1
-	netCheckSum(data, len, checksum2);													
-	
-
+										
 	int sizeofPack = len+2*sizeof(netcard)+3*sizeof(int32_t)+2*CHECKSUMLENGTH;
 	char *pack 		= (char *) malloc(sizeofPack);
 	char *packCrypt = (char *) malloc(sizeofPack+64);
@@ -118,6 +115,7 @@ void	sendDataAdv(netcard num, SENDTYPE type, char *data, int32_t len){
 	memcpy(&pack[ptr],&len, sizeof(int32_t));		ptr += sizeof(int32_t);	
 
 	netCheckSum(pack, ptr, checksum1);
+	netCheckSum(data, len, checksum2);
 	memcpy(&pack[ptr],checksum1, CHECKSUMLENGTH);	ptr += CHECKSUMLENGTH;
 	memcpy(&pack[ptr],data, len);					ptr += len;
 	memcpy(&pack[ptr],checksum2, CHECKSUMLENGTH);	ptr += CHECKSUMLENGTH;
@@ -130,7 +128,6 @@ void	sendDataAdv(netcard num, SENDTYPE type, char *data, int32_t len){
 		sendto(socket, packCrypt, sizeofPack, 0, (struct sockaddr *)&bcastAddr, addrlen);
 		close(socket);
 	}
-	//TODO
 	free(pack);
 	free(packCrypt);
 }
@@ -334,6 +331,12 @@ void* listenUDPBroadcast(void* nothing){
 
 			memcpy(data, 		&buffer[ptr], len);					ptr += len;
 			memcpy(checksum2,	&buffer[ptr], CHECKSUMLENGTH);		ptr += CHECKSUMLENGTH;
+
+			netCheckSum(data, len, csVerify);
+			if(!netAreCheckSumsEqual(csVerify, checksum2)){
+				printf("Msg is incorrect!\n");
+				continue;
+			}
 
 			//printf("card = %d == %d ?\n",dest,myNum);
 			if((dest == NETCARDBROADCAST && origin != myNum) || dest == myNum){
