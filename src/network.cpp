@@ -25,8 +25,9 @@ void (*dataServerCallBackFun)(netcard, char *, int32_t);
 void (*chanServerCallBackFun)(chan extChan);
 #define NPORTS				5
 
-int32_t 	TCPPORT 	= 2050;
-const char 	TCP_PORT[] 	= "2052";
+int32_t 	TCPPORT 		= 2050;
+const char 	TCP_PORT[] 		= "2052";
+static char _password[100] 	= "root";
 
 unsigned short ports[] = {49845,46532,31940,61361,19553,47144,33427,51413,59243,3715,25990,37660,11669,33685,14060,52152,35630,62479,33372,19254,8237,15836,57984,54667,12277,52407,31734,2539};
 
@@ -70,6 +71,10 @@ void 	initNetwork(){
 	//TODO
 }
 
+void	setNetworkPassword(char *pass){
+	strcpy(_password, pass);
+}
+
 netcard	getMyNetCard(){
 	return myNum;
 }
@@ -103,7 +108,7 @@ void	sendDataAdv(netcard num, SENDTYPE type, char *data, int32_t len){
 
 	int sizeofPack = len+2*sizeof(netcard)+3*sizeof(int32_t)+2*CHECKSUMLENGTH;
 	char *pack 		= (char *) malloc(sizeofPack);
-	char *packCrypt = (char *) malloc(sizeofPack);
+	char *packCrypt = (char *) malloc(sizeofPack+64);
 	if(NULL == pack) {printf("Malloc error"); return;}
 	int ptr = 0;
 	memcpy(&pack[ptr],&myNum, sizeof(netcard));		ptr += sizeof(netcard);
@@ -117,7 +122,7 @@ void	sendDataAdv(netcard num, SENDTYPE type, char *data, int32_t len){
 	memcpy(&pack[ptr],data, len);					ptr += len;
 	memcpy(&pack[ptr],checksum2, CHECKSUMLENGTH);	ptr += CHECKSUMLENGTH;
 
-	netEncryptSymmetric((char*)"password", pack, sizeofPack, packCrypt);
+	sizeofPack = netEncryptSymmetric(_password, pack, sizeofPack, packCrypt);
 	
 	for(int i=0; i<NPORTS; i++){
 		socket = createUDPSocket();
@@ -160,21 +165,31 @@ void	closeChannel(chan extChan){
 
 nErr	chanSend(chan extChan, char *data, ssize_t len){
 	//TODO:encrypt
-	/*char _dataOut[512];
-	netEncryptSymmetric((char*)"newKey", data, len, _dataOut);*/
+	char dataIn[2048], dataOut[2048];
+	netCheckSum(data, len, dataIn);
+	memcpy(&dataIn[CHECKSUMLENGTH], data, len);
+	len = netEncryptSymmetric(_password, dataIn, len + CHECKSUMLENGTH, dataOut);
 	
-	ssize_t sentBytes = send_TCP_msg(extChan, data, len);
+	ssize_t sentBytes = send_TCP_msg(extChan, dataOut, len);
 	if(sentBytes == -1) return NE_SENDING_FAILED;
 	else 				return NE_NO_ERROR;
 }
 nErr	chanRecv(chan extChan, char *data, ssize_t *len, size_t maxLen, long int sec_timeout){
 	//TODO:decrypt
-	/*char _dataOut[512];
-	netDecryptSymmetric((char*)"newKey", data, (int)*len, _dataOut);*/
-
+	char dataOut[2048], checkSum[CHECKSUMLENGTH];
+	
 	len[0] = rcv_TCP_msg(extChan, data, maxLen, sec_timeout);
 	if((len[0] == -2) || (len[0] == 0)) return NE_NETCARD_NOT_FOUND;
-	if(-1 != len[0]) return NE_NO_ERROR;
+	if(-1 != len[0]){
+		len[0] = netDecryptSymmetric(_password, data, (int)*len, dataOut);
+		if((len[0] -= CHECKSUMLENGTH) <= 0) return NE_DATA_CORRUPTION;
+
+		netCheckSum(&dataOut[CHECKSUMLENGTH], len[0], checkSum);
+		if(!netAreCheckSumsEqual(checkSum, dataOut)) return NE_DATA_CORRUPTION;
+
+		memcpy(data, &dataOut[CHECKSUMLENGTH], len[0]);
+		return NE_NO_ERROR;
+	}
 	return NE_TIMEOUT;
 }
 
@@ -187,6 +202,7 @@ void	displayErr(nErr e){
 		case NE_TIMEOUT:			printf("Connection time out!\n");				break;
 		case NE_NETCARD_NOT_FOUND:	printf("Netcard not found!\n");					break;
 		case NE_SENDING_FAILED:		printf("Sending on TCP socket failed!\n");		break;
+		case NE_DATA_CORRUPTION:	printf("The data is corrupted!\n");				break;
 	}
 }
 
@@ -297,7 +313,7 @@ void* listenUDPBroadcast(void* nothing){
 
        getnameinfo((struct sockaddr *) &remaddr,addrlen, host, NI_MAXHOST,service, NI_MAXSERV, NI_NUMERICSERV);
 
-		netDecryptSymmetric((char*) "password", bufferCrypt, rclen, buffer);
+		rclen = netDecryptSymmetric(_password, bufferCrypt, rclen, buffer);
 	
 		netcard origin, dest;
 		char checksum1[CHECKSUMLENGTH], checksum2[CHECKSUMLENGTH],csVerify[CHECKSUMLENGTH];

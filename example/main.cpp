@@ -35,6 +35,7 @@ void networkConnectionOrientedCallBack(chan extChan){
 
 int main(){
 	//setup
+	setNetworkPassword((char *)"LOL_02");
 	initNetwork();
 	chanServerCallBack(networkConnectionOrientedCallBack);
 	dataServerCallBack(networkConnectionlessCallBack);

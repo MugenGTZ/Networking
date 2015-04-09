@@ -16,7 +16,7 @@ This network module should do the following
 	#include <stdint.h>
 	#include <unistd.h>
 	#define NETCARDBROADCAST 	0
-	typedef enum {NE_NO_ERROR, NE_TIMEOUT, NE_NETCARD_NOT_FOUND, NE_SENDING_FAILED} nErr;
+	typedef enum {NE_NO_ERROR, NE_TIMEOUT, NE_NETCARD_NOT_FOUND, NE_SENDING_FAILED, NE_DATA_CORRUPTION} nErr;
 	typedef uint64_t chan;
 	typedef uint64_t netcard;
 
@@ -25,6 +25,7 @@ This network module should do the following
 
 	//Initialize network protocol
 	void 	initNetwork();
+	void	setNetworkPassword(char *pass);
 
 	//Connectionless network protocol
 	void 	dataServerCallBack(void (*fun)(netcard num, char *data, int32_t len));
