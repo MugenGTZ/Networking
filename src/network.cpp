@@ -172,17 +172,16 @@ nErr	chanSend(chan extChan, char *data, ssize_t len){
 	else 				return NE_NO_ERROR;
 }
 nErr	chanRecv(chan extChan, char *data, ssize_t *len, size_t maxLen, long int sec_timeout){
-	//TODO:decrypt
-	char dataOut[2048], checkSum[CHECKSUMLENGTH];
+	char dataOut[2048], dataIn[2048], checkSum[CHECKSUMLENGTH];
 	
-	len[0] = rcv_TCP_msg(extChan, data, maxLen, sec_timeout);
+	len[0] = rcv_TCP_msg(extChan, dataIn, maxLen + 128, sec_timeout);
 	if((len[0] == -2) || (len[0] == 0)) return NE_NETCARD_NOT_FOUND;
 	if(-1 != len[0]){
-		len[0] = netDecryptSymmetric(_password, data, (int)*len, dataOut);
-		if((len[0] -= CHECKSUMLENGTH) <= 0) return NE_DATA_CORRUPTION;
-
+		len[0] = netDecryptSymmetric(_password, dataIn, (int)*len, dataOut);
+		if((len[0] -= CHECKSUMLENGTH) <= 0) {printf("failed because length < 32\n"); return NE_DATA_CORRUPTION;}
+		
 		netCheckSum(&dataOut[CHECKSUMLENGTH], len[0], checkSum);
-		if(!netAreCheckSumsEqual(checkSum, dataOut)) return NE_DATA_CORRUPTION;
+		if(!netAreCheckSumsEqual(checkSum, dataOut)) {printf("failure: incorrect checksum\n"); return NE_DATA_CORRUPTION;}
 
 		memcpy(data, &dataOut[CHECKSUMLENGTH], len[0]);
 		return NE_NO_ERROR;
