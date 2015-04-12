@@ -148,7 +148,8 @@ chan	createChannel(netcard num){
 		peerInfo temp = netcardMap[num];
 		sprintf(port, "%d",temp.TCPport);
 		printf("Trying to connect to :%s at port :%s\n",temp.IP,port);
-		return (chan) connect2TCPServer(temp.IP, port);					//TODO: check 10 second value
+		//return (chan) connect2TCPServer(temp.IP, port);					//TODO: check 10 second value FS changed this on Monday
+		return (chan) connect2TCPServerTimeout(temp.IP, port, 5);
 	}
 	return (chan)-1;
 }
