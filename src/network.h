@@ -19,6 +19,8 @@ This network module should do the following
 	typedef enum {NE_NO_ERROR, NE_TIMEOUT, NE_NETCARD_NOT_FOUND, NE_SENDING_FAILED, NE_DATA_CORRUPTION} nErr;
 	typedef uint64_t chan;
 	typedef uint64_t netcard;
+	
+	#define INVALIDNETCARD ((netcard)-1)
 
 	//
 	netcard	getMyNetCard();
