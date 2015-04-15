@@ -50,9 +50,16 @@ int	connect2TCPServer(const char* serverIP, const char *portNum){
 
 
 ssize_t send_TCP_msg(int socket, char *buf, ssize_t msg_len){
+	struct timeval timeout; 
 	ssize_t sent = 0;
 	ssize_t tmp;
 
+	timeout.tv_sec = 2;
+	timeout.tv_usec = 0;
+	
+	if (setsockopt (socket, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *)&timeout, sizeof(timeout)) < 0)
+		return -1;
+	
 	while(sent < msg_len){													//keep sending message (TCP can crop the message) 
 		tmp = send(socket, &buf[sent], msg_len - sent, MSG_NOSIGNAL);		//MSG_NOSIGNAL -> does not die on unsucc. write
 		if(tmp < 0) return -1;												//different source of error.
