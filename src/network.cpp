@@ -176,6 +176,7 @@ nErr	chanRecv(chan extChan, char *data, ssize_t *len, size_t maxLen, long int se
 	char dataOut[2048], dataIn[2048], checkSum[CHECKSUMLENGTH];
 	
 	len[0] = rcv_TCP_msg(extChan, dataIn, maxLen + 128, sec_timeout);
+	printf("***********LENGTH************* is: %lu\n", len[0]);
 	if((len[0] == -2) || (len[0] == 0)) return NE_NETCARD_NOT_FOUND;
 	if(-1 != len[0]){
 		len[0] = netDecryptSymmetric(_password, dataIn, (int)*len, dataOut);
