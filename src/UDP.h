@@ -14,9 +14,8 @@
 #include <errno.h>
 
 int  	createUDPSocket			();
-int  	createUDPTimeoutSocket	(long int seconds);
+int  	createUDPTimeoutSocket	(long int seconds);																								//Creates an UDP socket with receive timeout
 bool 	bindToSocket			(int sck, unsigned short portNum);
 void 	setBroadcastSocket		(int sck, struct sockaddr_in *broadcastAddr,const char* subnetBcast, socklen_t addrlen, unsigned short portNum);
-void 	setReceiver				(struct sockaddr_in *remoteAddrStruct, socklen_t addrlen, const char* remoteIP, unsigned short portNum);
 
 #endif
